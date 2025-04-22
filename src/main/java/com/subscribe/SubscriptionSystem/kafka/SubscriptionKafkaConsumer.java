@@ -54,7 +54,7 @@ public class SubscriptionKafkaConsumer {
             sub.setStartAt(Instant.now().toString());
             sub.setEndAt(Instant.now().plusSeconds(bundle.getPeriod()).toString());
             sub.setStatus(SubscriptionStatus.PENDING);
-
+            sub.setOperator_id(message.getOperatorId());
             subscriptionRepository.save(sub);
 
             operatorSoapClient.activateSubscription(sub.getId());

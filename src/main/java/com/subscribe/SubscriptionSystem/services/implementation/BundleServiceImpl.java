@@ -65,7 +65,6 @@ public class BundleServiceImpl implements BundleService {
         existing.setCode(dto.getCode());
         existing.setPeriod(dto.getPeriod());
 
-        // Optional: setBuckets if needed
         // existing.setBuckets(...);
 
         return bundleMapper.toDTO(bundleRepository.save(existing));

@@ -1,5 +1,6 @@
 package com.subscribe.SubscriptionSystem.services.implementation;
 
+import com.subscribe.SubscriptionSystem.DTOs.BulkSubscriptionRequest;
 import com.subscribe.SubscriptionSystem.enums.SubscriptionStatus;
 import com.subscribe.SubscriptionSystem.kafka.SubscriptionKafkaProducer;
 import com.subscribe.SubscriptionSystem.kafka.SubscriptionMessage;
@@ -56,17 +57,18 @@ public class BulkSubscriptionServiceImpl implements BulkSubscriptionService {
      * @param bundleId bundle ID to subscribe users to
      */
     @Override
-    public void bulkSubscribe(List<String> usersId, String bundleId) {
+    public void bulkSubscribe(BulkSubscriptionRequest request) {
         // Find the bundle or throw if not found
-        Bundle bundle = bundleRepository.findById(bundleId)
+        Bundle bundle = bundleRepository.findById(request.getBundleId())
                 .orElseThrow(() -> new NoSuchElementException("This bundle does not exist"));
+
 
         // Submit each user to be processed asynchronously
         //usersId.forEach(userId -> processSubscriptionAsync(userId, bundle));
 
         // Send each userId to Kafka
-        usersId.forEach(userId -> {
-            SubscriptionMessage message = new SubscriptionMessage(userId, bundleId);
+        request.getUsersId().forEach(userId -> {
+            SubscriptionMessage message = new SubscriptionMessage(userId, request.getBundleId(),request.getOperatorId());
             kafkaProducer.send(message);
             log.info("Published to Kafka: {}", message);
         });
@@ -93,7 +95,7 @@ public class BulkSubscriptionServiceImpl implements BulkSubscriptionService {
             // Call the SOAP client to activate the subscription
             ActivateBundleResponse response = operatorSoapClient.activateSubscription(sub.getId());
 
-            // Log or print activation success (optional: you can check response success here)
+            // Log activation success
             log.info("Subscribed: " + userId);
 
         } catch (Exception e) {

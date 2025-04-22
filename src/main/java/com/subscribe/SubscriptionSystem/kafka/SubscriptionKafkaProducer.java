@@ -11,6 +11,6 @@ public class SubscriptionKafkaProducer {
     private KafkaTemplate<String, SubscriptionMessage> kafkaTemplate;
 
     public void send(SubscriptionMessage message) {
-        kafkaTemplate.send("subscription.create", message);
+        kafkaTemplate.send("subscription.create",message.getUserId(), message);
     }
 }

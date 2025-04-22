@@ -48,7 +48,7 @@ public class SubscriptionController {
     @PostMapping("/bulkSubscription")
     public ResponseEntity<String> bulkSubscriptionService(@RequestBody BulkSubscriptionRequest request)
     {
-        bulkService.bulkSubscribe(request.getUsersId(), request.getBundleId());
+        bulkService.bulkSubscribe(request);
         return ResponseEntity.accepted().body("Bulk subscription started");
     }
 
