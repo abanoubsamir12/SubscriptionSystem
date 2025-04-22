@@ -1,6 +1,8 @@
 package com.subscribe.SubscriptionSystem.services.implementation;
 
 import com.subscribe.SubscriptionSystem.enums.SubscriptionStatus;
+import com.subscribe.SubscriptionSystem.kafka.SubscriptionKafkaProducer;
+import com.subscribe.SubscriptionSystem.kafka.SubscriptionMessage;
 import com.subscribe.SubscriptionSystem.mappers.SubscriptionMapper;
 import com.subscribe.SubscriptionSystem.model.Bundle;
 import com.subscribe.SubscriptionSystem.model.Subscription;
@@ -36,6 +38,9 @@ public class BulkSubscriptionServiceImpl implements BulkSubscriptionService {
     private BundleRepository bundleRepository;
 
     @Autowired
+    SubscriptionKafkaProducer kafkaProducer;
+
+    @Autowired
     private OperatorSoapClient operatorSoapClient;
 
     @Autowired
@@ -57,7 +62,14 @@ public class BulkSubscriptionServiceImpl implements BulkSubscriptionService {
                 .orElseThrow(() -> new NoSuchElementException("This bundle does not exist"));
 
         // Submit each user to be processed asynchronously
-        usersId.forEach(userId -> processSubscriptionAsync(userId, bundle));
+        //usersId.forEach(userId -> processSubscriptionAsync(userId, bundle));
+
+        // Send each userId to Kafka
+        usersId.forEach(userId -> {
+            SubscriptionMessage message = new SubscriptionMessage(userId, bundleId);
+            kafkaProducer.send(message);
+            log.info("Published to Kafka: {}", message);
+        });
     }
 
     @Async("subscriptionExecutor")

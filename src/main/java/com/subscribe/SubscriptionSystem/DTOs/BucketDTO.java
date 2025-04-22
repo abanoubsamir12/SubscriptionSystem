@@ -8,7 +8,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.luaj.vm2.ast.Str;
 
-@Data
 public class BucketDTO {
     private String id;
     private BucketType type;
@@ -17,6 +16,11 @@ public class BucketDTO {
 
     public BucketDTO(String id, BucketType type, BucketUnit unit, int quantity) {
         this.id=id;
+        this.type = type;
+        this.unit = unit;
+        this.quantity = quantity;
+    }
+    public BucketDTO( BucketType type, BucketUnit unit, int quantity) {
         this.type = type;
         this.unit = unit;
         this.quantity = quantity;
