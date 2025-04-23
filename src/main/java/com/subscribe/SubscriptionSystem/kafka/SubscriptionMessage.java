@@ -5,7 +5,23 @@ import org.luaj.vm2.ast.Str;
 public class SubscriptionMessage {
     private String userId;
     private String bundleId;
+    private int duration;
     private String operatorId;
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public SubscriptionMessage(String userId, String bundleId, int duration, String operatorId) {
+        this.userId = userId;
+        this.bundleId = bundleId;
+        this.duration = duration;
+        this.operatorId = operatorId;
+    }
+
+    public void setDuration(int duration) {
+        this.duration = duration;
+    }
 
     public SubscriptionMessage(String userId, String bundleId, String operatorId) {
         this.userId = userId;

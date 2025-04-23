@@ -4,11 +4,14 @@ import com.subscribe.SubscriptionSystem.DTOs.BulkSubscriptionRequest;
 import com.subscribe.SubscriptionSystem.enums.SubscriptionStatus;
 import com.subscribe.SubscriptionSystem.kafka.SubscriptionKafkaProducer;
 import com.subscribe.SubscriptionSystem.kafka.SubscriptionMessage;
+import com.subscribe.SubscriptionSystem.mappers.BundleMapper;
 import com.subscribe.SubscriptionSystem.mappers.SubscriptionMapper;
 import com.subscribe.SubscriptionSystem.model.Bundle;
+import com.subscribe.SubscriptionSystem.model.Operator;
 import com.subscribe.SubscriptionSystem.model.Subscription;
 import com.subscribe.SubscriptionSystem.model.User;
 import com.subscribe.SubscriptionSystem.repository.BundleRepository;
+import com.subscribe.SubscriptionSystem.repository.OperatorRepository;
 import com.subscribe.SubscriptionSystem.repository.SubscriptionRepository;
 import com.subscribe.SubscriptionSystem.repository.UserRepository;
 import com.subscribe.SubscriptionSystem.services.BulkSubscriptionService;
@@ -37,6 +40,8 @@ public class BulkSubscriptionServiceImpl implements BulkSubscriptionService {
 
     @Autowired
     private BundleRepository bundleRepository;
+    @Autowired
+    BundleMapper bundleMapper;
 
     @Autowired
     SubscriptionKafkaProducer kafkaProducer;
@@ -49,18 +54,21 @@ public class BulkSubscriptionServiceImpl implements BulkSubscriptionService {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private OperatorRepository operatorRepository;
 
     /**
      * Asynchronously subscribes a list of users to a bundle and activates the subscription via SOAP.
      *
-     * @param usersId  list of user IDs to subscribe
-     * @param bundleId bundle ID to subscribe users to
+     * @param BulkSubscriptionRequest request
      */
     @Override
     public void bulkSubscribe(BulkSubscriptionRequest request) {
         // Find the bundle or throw if not found
         Bundle bundle = bundleRepository.findById(request.getBundleId())
                 .orElseThrow(() -> new NoSuchElementException("This bundle does not exist"));
+        Operator operator = operatorRepository.findById(request.getOperatorId())
+                .orElseThrow(()-> new NoSuchElementException("This operator does not exist"));
 
 
         // Submit each user to be processed asynchronously
@@ -68,7 +76,8 @@ public class BulkSubscriptionServiceImpl implements BulkSubscriptionService {
 
         // Send each userId to Kafka
         request.getUsersId().forEach(userId -> {
-            SubscriptionMessage message = new SubscriptionMessage(userId, request.getBundleId(),request.getOperatorId());
+            SubscriptionMessage message = new SubscriptionMessage(userId, bundle.getId(),bundle.getPeriod()
+                    ,request.getOperatorId());
             kafkaProducer.send(message);
             log.info("Published to Kafka: {}", message);
         });
