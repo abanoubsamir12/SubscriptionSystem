@@ -19,47 +19,66 @@ import java.time.Instant;
 import java.util.NoSuchElementException;
 
 @Component
-
 public class SubscriptionKafkaConsumer {
 
+    // Logger instance for logging events
     private static final Logger log = LoggerFactory.getLogger(BulkSubscriptionServiceImpl.class);
 
+    // Injecting Subscription repository to persist subscription data
     @Autowired
     private SubscriptionRepository subscriptionRepository;
 
+    // Injecting User repository to fetch user information
     @Autowired
     private UserRepository userRepository;
 
+    // Injecting Bundle repository to fetch bundle details
     @Autowired
     private BundleRepository bundleRepository;
 
+    // Injecting SOAP client to activate subscriptions via external service
     @Autowired
     private OperatorSoapClient operatorSoapClient;
 
-    @KafkaListener(topics = "subscription.create", groupId = "subscription-group", containerFactory = "subscriptionListenerFactory")
+    /**
+     * Kafka consumer method to listen for new subscription messages
+     * from the "subscription.create" topic.
+     */
+    @KafkaListener(
+            topics = "subscription.create",
+            groupId = "subscription-group",
+            containerFactory = "subscriptionListenerFactory"
+    )
     public void consume(SubscriptionMessage message) {
-
         try {
+            // Log the consumed Kafka message
             log.info("Consumed from Kafka: {}", message);
 
+            // Retrieve the user from the database or throw if not found
             User user = userRepository.findById(message.getUserId())
                     .orElseThrow(() -> new NoSuchElementException("User not found"));
 
+            // Retrieve the bundle from the database or throw if not found
             Bundle bundle = bundleRepository.findById(message.getBundleId())
                     .orElseThrow(() -> new NoSuchElementException("Bundle not found"));
 
+            // Create a new Subscription object and populate it
             Subscription sub = new Subscription();
             sub.setUser_id(user.getId());
             sub.setBundle_id(bundle.getId());
-            sub.setStartAt(Instant.now().toString());
-            sub.setEndAt(Instant.now().plusSeconds(bundle.getPeriod()).toString());
-            sub.setStatus(SubscriptionStatus.PENDING);
-            sub.setOperator_id(message.getOperatorId());
+            sub.setStartAt(Instant.now().toString()); // Start time is now
+            sub.setEndAt(Instant.now().plusSeconds(bundle.getPeriod()).toString()); // End time is based on bundle duration
+            sub.setStatus(SubscriptionStatus.PENDING); // Set initial status
+            sub.setOperator_id(message.getOperatorId()); // Set operator ID
+
+            // Save the new subscription in the database
             subscriptionRepository.save(sub);
 
+            // Call external SOAP service to activate the subscription
             operatorSoapClient.activateSubscription(sub.getId());
 
         } catch (Exception e) {
+            // Log any error that occurs during processing
             log.error("Kafka processing failed: {}", e.getMessage());
         }
     }
