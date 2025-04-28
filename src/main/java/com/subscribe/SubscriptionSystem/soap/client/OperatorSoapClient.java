@@ -19,7 +19,7 @@ public class OperatorSoapClient {
         request.setSubscriptionId(id);
 
         return (ActivateBundleResponse) webServiceTemplate.marshalSendAndReceive(
-                "http://localhost:8080/ws",
+                "http://soap-service:8081/ws",
                 request,
                 new SoapActionCallback("http://subscribe.com/operator/ws/ActivateBundleRequest")
         );

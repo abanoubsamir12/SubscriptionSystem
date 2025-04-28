@@ -1,7 +1,6 @@
 package com.subscribe.SubscriptionSystem.kafka;
 
 import com.subscribe.SubscriptionSystem.enums.SubscriptionStatus;
-import com.subscribe.SubscriptionSystem.model.Bundle;
 import com.subscribe.SubscriptionSystem.model.Subscription;
 import com.subscribe.SubscriptionSystem.model.User;
 import com.subscribe.SubscriptionSystem.repository.BundleRepository;
