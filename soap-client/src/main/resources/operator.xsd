@@ -1,0 +1,24 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://subscribe.com/operator/ws"
+           xmlns="http://subscribe.com/operator/ws"
+           elementFormDefault="qualified">
+
+    <!-- Request -->
+    <xs:element name="ActivateBundleRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="subscriptionId" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Response -->
+    <xs:element name="ActivateBundleResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="success" type="xs:boolean"/>
+                <xs:element name="message" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
