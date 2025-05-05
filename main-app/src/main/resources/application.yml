@@ -1,0 +1,7 @@
+spring:
+  kafka:
+    bootstrap-servers: kafka:9092
+
+
+soap:
+  endpoint: http://localhost:8080/ws/operator.wsdl

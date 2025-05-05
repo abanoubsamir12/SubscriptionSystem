@@ -22,7 +22,7 @@ configurations {
 }
 
 bootJar {
-	archiveBaseName = 'gs-producing-web-service'
+	archiveBaseName = 'the whole jar'
 	archiveVersion = '0.1.0'
 }
 

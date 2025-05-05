@@ -1,55 +1,83 @@
+version: '3.8'
+
 services:
-    zookeeper:
-      image: confluentinc/cp-zookeeper:7.3.0
-      container_name: zookeeper
-      ports:
-        - "2181:2181"
-      environment:
-        ZOOKEEPER_CLIENT_PORT: 2181
-      networks:
-        - my-shared-network
 
-    kafka:
-      image: confluentinc/cp-kafka:7.3.0
-      container_name: kafka
-      ports:
-        - "9092:9092"
-      environment:
-        KAFKA_BROKER_ID: 1
-        KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
-        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-        KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      networks:
-        - my-shared-network
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - my-shared-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - my-shared-network
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "kafka:9092", "--list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
 
+  aerospike_2:
+    image: aerospike/aerospike-server:latest
+    container_name: aerospike_2
+    ports:
+      - "3000:3000"
+    networks:
+      - my-shared-network
+    healthcheck:
+      test: [ "CMD", "asinfo", "-v", "status" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-    soap-service:
-      build:
-        context: .
-        dockerfile: Dockerfile.soap
-      container_name: soap-service
-      ports:
-        - "8081:8081"
-      depends_on:
-        kafka:
-          condition: service_healthy
-      networks:
-        - my-shared-network
+  soap-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.soap
+    container_name: soap-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      aerospike_2:
+        condition: service_healthy
+    networks:
+      - my-shared-network
 
-    subscription-api:
-      build:
-        context: .
-        dockerfile: Dockerfile.api
-      container_name: subscription-api
-      ports:
-        - "8082:8082"
-      depends_on:
-        - soap-service
-      networks:
-        - my-shared-network
+  main-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: main-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      soap-service:
+        condition: service_started
+      kafka:
+        condition: service_healthy
+    networks:
+      - my-shared-network
+
 
 networks:
   my-shared-network:
-    external: true
+    driver: bridge

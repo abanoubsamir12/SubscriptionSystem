@@ -1,9 +1,10 @@
+# Dockerfile.main
+
 FROM openjdk:17-jdk-slim
-ENV SPRING_PROFILES_ACTIVE=docker
-WORKDIR /app
 
-COPY build/libs/SubscriptionSystem-0.0.1-SNAPSHOT-plain.jar app.jar
+# Copy the main-app JAR
+COPY main-app/build/libs/main-app-0.0.1-SNAPSHOT.jar app.jar
 
-EXPOSE 8082
+EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "/app.jar"]

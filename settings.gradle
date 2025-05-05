@@ -1,1 +1,2 @@
 rootProject.name = 'SubscriptionSystem'
+include 'common-db', 'main-app', 'soap-service','soap-client'

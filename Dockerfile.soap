@@ -1,9 +1,11 @@
-FROM openjdk:17-jdk-slim
-ENV SPRING_PROFILES_ACTIVE=docker
-WORKDIR /soap
+# Dockerfile.soap
 
-COPY build/libs/gs-producing-web-service-0.1.0.jar soap.jar
+FROM openjdk:17-jdk-slim
+
+# Copy the soap-service JAR
+COPY soap-service/build/libs/soap-service-0.1.0.jar app.jar
 
 EXPOSE 8081
 
-ENTRYPOINT ["java", "-jar", "soap.jar"]
+ENTRYPOINT ["java", "-jar", "/app.jar"]
+

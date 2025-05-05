@@ -1,0 +1,88 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.4'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.subscribe'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    jaxb
+}
+
+bootJar {
+    archiveBaseName = 'soap-client'
+    archiveVersion = '0.1.0'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java'
+            srcDir 'build/generated-sources/jaxb'
+        }
+    }
+}
+
+task genJaxb {
+    ext.sourcesDir = "${buildDir}/generated-sources/jaxb"
+    ext.schema = "src/main/resources/operator.xsd"
+
+    outputs.dir sourcesDir
+
+    doLast {
+        ant.taskdef(
+                name: 'xjc',
+                classname: 'com.sun.tools.xjc.XJCTask',
+                classpath: configurations.jaxb.asPath
+        )
+
+        ant.mkdir(dir: sourcesDir)
+
+        ant.xjc(
+                destdir: sourcesDir,
+                schema: schema,
+                package: 'com.subscribe.SubscriptionSystem.soap.ws'
+        ) {
+            arg(value: "-nv")
+            arg(value: "-extension")
+            produces(dir: sourcesDir, includes: "**/*.java")
+        }
+    }
+}
+
+compileJava.dependsOn genJaxb
+dependencies {
+    implementation project(':common-db')
+    implementation 'org.springframework.boot:spring-boot-starter-web-services'
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.0'
+    implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.4'
+    jaxb 'org.glassfish.jaxb:jaxb-xjc:4.0.4'
+
+    implementation 'com.aerospike:spring-data-aerospike:4.6.0'
+    implementation 'com.aerospike:aerospike-client:6.3.0'
+
+
+
+    implementation 'wsdl4j:wsdl4j:1.6.3'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+}
+
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
